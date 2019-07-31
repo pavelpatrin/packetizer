@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import typing
 import re
+import sys
 
 logger = logging.getLogger()
 
@@ -86,7 +87,7 @@ class Packetizer:
         self.temp = os.path.expanduser('~/rpmbuild/PYTHON/temp')
         self.venv = os.path.expanduser('~/rpmbuild/PYTHON/venv')
 
-        # Where to put created archives and specs.
+        # Where to put created archives and specs.web/pads/api_v2/mediation.py
         self.sources = os.path.expanduser('~/rpmbuild/SOURCES')
         self.specs = os.path.expanduser('~/rpmbuild/SPECS')
 
@@ -311,10 +312,6 @@ def main():
         help='pip package expression to packetize',
     )
     parser.add_argument(
-        '--python',
-        help='python interpreter path',
-    )
-    parser.add_argument(
         '--prefix',
         help='packages names prefix',
     )
@@ -336,7 +333,7 @@ def main():
     package, verexpr = search.group(1), search.group(2)
 
     # Start working on package.
-    packetizer = Packetizer(args.python, args.prefix)
+    packetizer = Packetizer(sys.executable, args.prefix)
     packetizer.packetize(package, verexpr, args.recursive, args.exclude)
 
 
