@@ -11,7 +11,7 @@ This tool builds RPM SPEC files for PIP package and its dependencies.
 This tool works in few steps:
 
 * Installs required package (and all dependencies) into `~/rpmbuild/PYTHON/venv`.
-* Downloads _installed_ package version sources.
+* Downloads _installed_ package version sources into `~/rpmbuild/PYTHON/temp`.
 * Builds RPM SPEC file via standard `setup.py bdist_rpm`.
 * Calls `pipdeptree` to detect installed package dependencies.
 * Injects `Requires` and `Conflicts` metadata to built SPEC.
