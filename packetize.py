@@ -76,13 +76,17 @@ class Package:
 
 
 class Packetizer:
-    def __init__(self, python_path: str, names_prefix: str):
+    def __init__(self, python_path: str, names_prefix: str, index_url: str, json_url: str):
         # Python used for RPM building hard-coded into spec.
         # Python used for package downloading and installing.
         self.system_python = self.active_python = python_path
 
         # RPM package names prefix (also for deps).
         self.prefix = names_prefix
+
+        # Pip API endpoints.
+        self.index_url = index_url
+        self.json_url = json_url
 
         # Where to create archives and build specs.
         self.temp = os.path.expanduser('~/rpmbuild/PYTHON/temp')
@@ -104,7 +108,8 @@ class Packetizer:
             self.active_python = os.path.join(self.venv, 'bin/python')
 
             logger.info('Installing pipdeptree: %s', 'pipdeptree==0.13.2')
-            check_output([self.active_python, '-m', 'pip', 'install', 'pipdeptree==0.13.2'])
+            check_output([self.active_python, '-m', 'pip', 'install',
+                          '-i', self.index_url, 'pipdeptree==0.13.2'])
         else:
             logger.info('Activating virtualenv: %s', self.venv)
             self.active_python = os.path.join(self.venv, 'bin/python')
@@ -228,7 +233,8 @@ class Packetizer:
             Installs pip package expression into virtual environment.
         """
         logger.info('Installing package: %s%s...', package.package, package.version)
-        check_output([self.active_python, '-m', 'pip', 'install', package.expression])
+        check_output([self.active_python, '-m', 'pip', 'install',
+                      '-i', self.index_url, package.expression])
 
     def _collect_package_metadata(self, package: Package):
         """
@@ -257,7 +263,8 @@ class Packetizer:
         output = check_output([self.active_python, '-m', 'pip', 'show', package.package])
         package.package = re.search(r'Name: ([^\s]+)', output).group(1)
         package.version = re.search(r'Version: ([^\s]+)', output).group(1)
-        data = requests.get('https://pypi.org/pypi/%s/json' % package.package).json()
+
+        data = requests.get(self.json_url % package.package).json()
         meta = next(d for d in data['releases'][package.version] if d['packagetype'] == 'sdist')
         logger.info('Querying sources: %s found', meta['url'])
 
@@ -332,6 +339,16 @@ def main():
         help='regex exclude dependencies',
         default='',
     )
+    parser.add_argument(
+        '--pip-index-url',
+        help='pip index url',
+        default='https://pypi.org/simple'
+    )
+    parser.add_argument(
+        '--pip-json-url',
+        help='pip json url',
+        default='https://pypi.org/pypi/%s/json'
+    )
     args = parser.parse_args()
 
     # Parse package expression (package name and version expression).
@@ -339,7 +356,7 @@ def main():
     package, verexpr = search.group(1), search.group(2)
 
     # Start working on package.
-    packetizer = Packetizer(sys.executable, args.prefix)
+    packetizer = Packetizer(sys.executable, args.prefix, args.pip_index_url, args.pip_json_url)
     packetizer.packetize(package, verexpr, args.recursive, args.exclude)
 
 
