@@ -4,6 +4,7 @@ import dataclasses
 import json
 import logging
 import os
+import requests
 import shutil
 import subprocess
 import typing
@@ -252,16 +253,21 @@ class Packetizer:
         """
             Downloads installed package version sources archive.
         """
-        logger.info('Downloading sources: %s...', package.expression)
-        command = [self.active_python, '-m', 'pip', 'download', package.expression]
-        command += ['--no-binary', ':all:', '--no-deps', '--dest', self.sources]
-        match = re.search(r'(Saved|downloaded) ([^\s]+)', check_output(command))
-        package.archive = os.path.join(self.sources, os.path.basename(match.group(2)))
-        logger.info('Downloading sources: %s downloaded', package.archive)
-
+        logger.info('Querying sources: %s...', package.expression)
         output = check_output([self.active_python, '-m', 'pip', 'show', package.package])
         package.package = re.search(r'Name: ([^\s]+)', output).group(1)
         package.version = re.search(r'Version: ([^\s]+)', output).group(1)
+        data = requests.get('https://pypi.org/pypi/%s/json' % package.package).json()
+        meta = next(d for d in data['releases'][package.version] if d['packagetype'] == 'sdist')
+        logger.info('Querying sources: %s found', meta['url'])
+
+        logger.info('Downloading sources: %s', package.package)
+        content = requests.get(meta['url']).content
+        target = os.path.join(self.sources, meta['filename'])
+        with open(target, 'wb') as fp:
+            fp.write(content)
+        package.archive = target
+        logger.info('Downloading sources: %s downloaded', package.archive)
 
         logger.info('Unpacking sources: %s...', package.archive)
         shutil.unpack_archive(os.path.join(self.sources, package.archive), self.temp)
