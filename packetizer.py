@@ -327,6 +327,7 @@ def main():
     parser.add_argument(
         '--prefix',
         help='packages names prefix',
+        default='',
     )
     parser.add_argument(
         '--recursive',
