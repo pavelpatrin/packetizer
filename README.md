@@ -6,6 +6,10 @@ This is a simple python script that calls `setup.py bdist_rpm`.
 
 This tool builds RPM SPEC files for PIP package and its dependencies.
 
+## Installation?
+
+    pip install git+https://github.com/pavelpatrin/packetizer.git
+
 ## How it works?
 
 This tool works in few steps:
@@ -22,7 +26,7 @@ This tool works in few steps:
 (Search for keyword "prepared".)
 
 ```
-[root@ffee3cc41437 ~]# python3.7 packetize.py --prefix 'myproject-python37-' --recursive 'WeasyPrint'
+[root@ffee3cc41437 ~]# python3.7 -m packetizer --prefix 'myproject-python37-' --recursive 'WeasyPrint'
 
 Creating temporary: /root/rpmbuild/PYTHON/temp
 Creating virtualenv: /root/rpmbuild/PYTHON/venv
