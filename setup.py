@@ -8,4 +8,5 @@ setup(
     author_email='pavelpatrin@gmail.com',
     url='https://github.com/pavelpatrin/packetizer/',
     install_requires=['pip', 'requests'],
+    packages=['packetizer'],
 )
