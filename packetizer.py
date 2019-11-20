@@ -274,12 +274,18 @@ class Packetizer:
         with open(target, 'wb') as fp:
             fp.write(content)
         package.archive = target
+        if not package.package in package.archive:
+            # package is not named like archive
+            package.package = self._extract_package_from_archive(package.archive)
         logger.info('Downloading sources: %s downloaded', package.archive)
 
         logger.info('Unpacking sources: %s...', package.archive)
         shutil.unpack_archive(os.path.join(self.sources, package.archive), self.temp)
         package.sources = os.path.join(self.temp, '%s-%s' % (package.package, package.version))
         logger.info('Unpacking sources: %s unpacked', package.sources)
+
+    def _extract_package_from_archive(self, archive: str) -> str:
+        return '-'.join(os.path.basename(archive).split('-')[:-1])
 
     def _build_package_spec(self, package: Package):
         """
